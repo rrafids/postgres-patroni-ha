@@ -17,6 +17,42 @@ services:
       - patroni_cluster
     command: ["consul", "agent", "-server", "-bootstrap-expect=1", "-data-dir=/consul/data"]
 
+  patroni1:
+    image: ongres/patroni
+    command: ["patroni", "./config/patroni.yml"]  # Corrected path
+    volumes:
+      - ./patroni/patroni1/config.yml:/config/patroni.yml
+      - ./patroni/patroni1/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+
+  patroni2:
+    image: ongres/patroni
+    command: ["patroni", "./config/patroni.yml"]  # Corrected path
+    volumes:
+      - ./patroni/patroni2/config.yml:/config/patroni.yml
+      - ./patroni/patroni2/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+
+  patroni3:
+    image: ongres/patroni
+    command: ["patroni", "./config/patroni.yml"]  # Corrected path
+    volumes:
+      - ./patroni/patroni3/config.yml:/config/patroni.yml
+      - ./patroni/patroni3/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+
   haproxy:
     image: haproxy
     volumes:
@@ -29,45 +65,12 @@ services:
       - patroni1
       - patroni2
       - patroni3
-
-  patroni1:
-    image: my-patroni
-    volumes:
-      - ./patroni/patroni1/config.yml:/config/patroni.yml
-      - ./patroni/patroni1/data:/data
-    networks:
-      - patroni_cluster
-    depends_on:
-      - etcd
-      - consul
-
-  patroni2:
-    image: my-patroni
-    volumes:
-      - ./patroni/patroni2/config.yml:/config/patroni.yml
-      - ./patroni/patroni2/data:/data
-    networks:
-      - patroni_cluster
-    depends_on:
-      - etcd
-      - consul
-
-  patroni3:
-    image: my-patroni
-    volumes:
-      - ./patroni/patroni3/config.yml:/config/patroni.yml
-      - ./patroni/patroni3/data:/data
-    networks:
-      - patroni_cluster
-    depends_on:
-      - etcd
-      - consul
   
-  ubuntu:
-    image: ubuntu:latest
-    command: tail -f /dev/null
-    networks:
-      - patroni_cluster
+  # ubuntu:
+  #   image: ubuntu:latest
+  #   command: tail -f /dev/null
+  #   networks:
+  #     - patroni_cluster
 
 networks:
   patroni_cluster:

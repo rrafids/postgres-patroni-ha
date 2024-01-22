@@ -25,6 +25,7 @@ bootstrap:
         max_wal_senders: 5
         max_replication_slots: 5
         checkpoint_timeout: 30
+        
 postgresql:
   listen: 0.0.0.0:5432
   connect_address: patroni1:5432
