@@ -1,0 +1,74 @@
+version: '3.7'
+
+services:
+  etcd:
+    image: pachyderm/etcd:v3.5.5
+    volumes:
+      - ./etcd/data:/etcd-data
+    networks:
+      - patroni_cluster
+    command: etcd -name etcd0 -advertise-client-urls http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 -initial-advertise-peer-urls http://etcd:2380 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster etcd0=http://etcd:2380 -initial-cluster-token tkn -initial-cluster-state new
+
+  consul:
+    image: consul:1.10.0
+    volumes:
+      - ./consul/data:/consul-data
+    networks:
+      - patroni_cluster
+    command: ["consul", "agent", "-server", "-bootstrap-expect=1", "-data-dir=/consul/data"]
+
+  haproxy:
+    image: haproxy
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "5000:5000"
+    networks:
+      - patroni_cluster
+    depends_on:
+      - patroni1
+      - patroni2
+      - patroni3
+
+  patroni1:
+    image: my-patroni
+    volumes:
+      - ./patroni/patroni1/config.yml:/config/patroni.yml
+      - ./patroni/patroni1/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+
+  patroni2:
+    image: my-patroni
+    volumes:
+      - ./patroni/patroni2/config.yml:/config/patroni.yml
+      - ./patroni/patroni2/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+
+  patroni3:
+    image: my-patroni
+    volumes:
+      - ./patroni/patroni3/config.yml:/config/patroni.yml
+      - ./patroni/patroni3/data:/data
+    networks:
+      - patroni_cluster
+    depends_on:
+      - etcd
+      - consul
+  
+  ubuntu:
+    image: ubuntu:latest
+    command: tail -f /dev/null
+    networks:
+      - patroni_cluster
+
+networks:
+  patroni_cluster:
+    driver: bridge
